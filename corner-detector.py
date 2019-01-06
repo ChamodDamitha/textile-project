@@ -1,6 +1,45 @@
 import cv2
 import numpy as np
 import math
+import csv
+
+
+def setMeasurements(measurements):
+    with open("measurements.csv", mode='w') as measurements_file:
+        measurements['ERROR'] = input("Enter error in cm : ")
+        measurements['WIDTH'] = input("Enter width in cm : ")
+        measurements['HEIGHT'] = input("Enter height in cm : ")
+
+        measurements_writer = csv.writer(measurements_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+
+        measurements_writer.writerow(['ERROR', measurements['ERROR']])
+        measurements_writer.writerow(['WIDTH', measurements['WIDTH']])
+        measurements_writer.writerow(['HEIGHT', measurements['HEIGHT']])
+
+        print("Required measurements(cm).....")
+        print(measurements)
+
+    return measurements
+
+
+measurements = {}
+
+try:
+    with open("measurements.csv", mode='r') as measurements_file:
+        measurements_reader = csv.reader(measurements_file)
+        for row in measurements_reader:
+            measurements[row[0]] = row[1]
+
+        if len(measurements) < 3:
+            measurements = setMeasurements(measurements)
+        else:
+            print("Required measurements(cm).....")
+            print(measurements)
+            SET_MEASUREMENTS = raw_input("Change current measurements? [N/y]")
+            if SET_MEASUREMENTS.lower() == 'y':
+                measurements = setMeasurements(measurements)
+except IOError:
+    measurements = setMeasurements(measurements)
 
 filename = 'good-thirts/tshirt-sample.png'
 img = cv2.imread(filename)
@@ -20,7 +59,6 @@ threshold = 0.1 * dst.max()
 # Threshold for an optimal value, it may vary depending on the image.
 arr = dst > threshold
 img[arr] = [0, 255, 0]
-
 
 corners = []
 
@@ -52,23 +90,27 @@ for j in range(len(arr)):
         if arr[j][i]:
             addCorner(i, j)
 
-print("corners", corners)
-
 corners.sort(key=lambda t: t[1])
-print("corners", corners)
 
-shoulders = corners[2:4]
+colar = corners[0]
+# shoulders = corners[2:4]
 bottoms = corners[-2:]
 
-print("shoulders", shoulders)
-print("bottoms", bottoms)
+# print("shoulders", shoulders)
 print
-print
-print("Measurements...........")
+print("Current Measurements(cm)...........")
 
-print("shoulder width : ", length(shoulders[0], shoulders[1]))
-print("width : ", length(bottoms[0], bottoms[1]))
-print("height : ", distance(bottoms[0], bottoms[1], shoulders[0]))
+# print("shoulder width : ", length(shoulders[0], shoulders[1]))
+width = length(bottoms[0], bottoms[1])
+height = distance(bottoms[0], bottoms[1], colar)
+print("width : " + str(width))
+print("height : " + str(height))
+
+if math.fabs(width - int(measurements['WIDTH'])) < int(measurements['ERROR']) \
+        and math.fabs(height - int(measurements['HEIGHT'])) < int(measurements['ERROR']):
+    print("GOOD")
+else:
+    print("BAD")
 
 # cv2.imshow('corner', im_bw)
 # cv2.imshow('corner-detected', cv2.blur(im_bw, (5, 5)))

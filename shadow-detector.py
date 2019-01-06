@@ -4,11 +4,12 @@ import imutils
 
 ALLOWED_SHADOW_PERCENTAGE = 10
 filename = 'bad-thirts/shirt.jpg'
-filename = 'bad-thirts/red-tshirt.jpg'
-# filename = 'bad-thirts/black-tshirt.jpeg'
+# filename = 'bad-thirts/red-tshirt.jpg'
+filename = 'bad-thirts/black-tshirt.jpeg'
 # filename = 'bad-thirts/pink-tshirt.jpeg'
 # filename = 'bad-thirts/black-tshirt-2.jpg'
 # filename = 'bad-thirts/tshirt-backgound-2.jpg'
+# filename = 'bad-thirts/messy-background-tshirt.jpg'
 
 IMG_WIDTH = 500
 IMG_HEIGHT = 600
