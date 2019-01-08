@@ -2,6 +2,11 @@ import cv2
 import numpy as np
 import math
 import csv
+import imutils
+
+# in cm
+CAMERA_HEIGHT = 136
+LENGTH_TO_PIXEL_AND_CAMERA_HEIGHT_RATIO = 94.0 / (1000 * 136)
 
 
 def setMeasurements(measurements):
@@ -41,8 +46,11 @@ try:
 except IOError:
     measurements = setMeasurements(measurements)
 
-filename = 'good-thirts/tshirt-sample.png'
+filename = 'good-thirts/real-tshirt-new.jpeg'
 img = cv2.imread(filename)
+img = cv2.resize(img, (1000, 1000))
+cv2.imshow("Show by CV2", img)
+
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
 (thresh, im_bw) = cv2.threshold(gray, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
@@ -50,7 +58,7 @@ gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 # im_bw = cv2.blur(im_bw, (5, 5))
 
 im_bw = np.float32(im_bw)
-dst = cv2.cornerHarris(im_bw, 2, 3, 0.04)
+dst = cv2.cornerHarris(im_bw, 2, 3, 0.03)
 
 # result is dilated for marking the corners, not important
 dst = cv2.dilate(dst, None)
@@ -94,26 +102,32 @@ corners.sort(key=lambda t: t[1])
 
 colar = corners[0]
 # shoulders = corners[2:4]
-bottoms = corners[-2:]
+
+
+bottom_corners = [c for c in corners if c[1] > img.shape[1] / 2]
+bottom_corners.sort(key=lambda t:t[0])
+bottoms = [bottom_corners[0], bottom_corners[-1]]
 
 # print("shoulders", shoulders)
 print
 print("Current Measurements(cm)...........")
 
 # print("shoulder width : ", length(shoulders[0], shoulders[1]))
-width = length(bottoms[0], bottoms[1])
-height = distance(bottoms[0], bottoms[1], colar)
-print("width : " + str(width))
-print("height : " + str(height))
+width = length(bottoms[0], bottoms[1]) * LENGTH_TO_PIXEL_AND_CAMERA_HEIGHT_RATIO * CAMERA_HEIGHT
+height = distance(bottoms[0], bottoms[1], colar) * LENGTH_TO_PIXEL_AND_CAMERA_HEIGHT_RATIO * CAMERA_HEIGHT
+print("width(cm) : " + str(width))
+print("height(cm) : " + str(height))
 
 if math.fabs(width - int(measurements['WIDTH'])) < int(measurements['ERROR']) \
         and math.fabs(height - int(measurements['HEIGHT'])) < int(measurements['ERROR']):
-    print("GOOD")
+    print("STATUS : GOOD")
 else:
-    print("BAD")
+    print("STATUS : BAD")
 
 # cv2.imshow('corner', im_bw)
 # cv2.imshow('corner-detected', cv2.blur(im_bw, (5, 5)))
+
 cv2.imshow('corner-detected', img)
+
 if cv2.waitKey(0) & 0xff == 27:
     cv2.destroyAllWindows()
